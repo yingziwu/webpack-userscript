@@ -19,9 +19,9 @@ A Webpack5 plugin for bundling userscripts. 🙈
 npm i webpack-userscript@next -D
 ```
 
-## Usage
 
-
+## User Guide
+### Usage
 Include the plugin in the `webpack.config.js` as follows,
 
 ```js
@@ -34,9 +34,7 @@ module.exports = {
 }
 ```
 
-## User Guide
 ### Quick Start
-
 #### Hot Development
 The following example can be used in development mode with the help of [`webpack-dev-server`](https://github.com/webpack/webpack-dev-server).
 

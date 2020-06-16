@@ -30,6 +30,7 @@
   "homepage": "https://github.com/momocow/webpack-userscript#readme",
   "devDependencies": {
     "@semantic-release/git": "^9.0.0",
+    "@types/webpack-sources": "^1.4.0",
     "@typescript-eslint/eslint-plugin": "^3.3.0",
     "eslint": "^7.2.0",
     "eslint-config-standard": "^14.1.1",
@@ -58,6 +59,7 @@
     "webpack-sources": "^1.4.3"
   },
   "files": [
-    "build"
+    "build",
+    "schemas"
   ]
 }

@@ -1,8 +1,8 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema",
   "definitions": {
     "HeaderObject": {
-      "description": "A header object",
-      "typeof": "object"
+      "$ref": "headers.json"
     },
     "HeaderProvider": {
       "description": "A function that returns a HeaderObject",

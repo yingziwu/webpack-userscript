@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "definitions": {
+    "Connect": {
+      "anyOf": [
+        { "enum": [ "self", "localhost", "*" ] },
+        { "type": "string", "format": "ipv4" },
+        { "type": "string", "format": "ipv6" },
+        { "type": "string", "format": "idn-hostname" }
+      ]
+    },
+    "Grant": {
+      "anyOf": [
+        { "enum": [ "none", "window.close", "window.focus" ] },
+        { "$ref": "_fields.json#/definitions/MonkeyApi" }
+      ]
+    },
+    "RunAt": {
+      "enum": [
+        "document-start",
+        "document-end",
+        "document-idle",
+        "context-menu"
+      ]
+    }
+  },
+  "allOf": [
+    { "$ref": "default.json" },
+    {
+      "additionalProperties": true,
+      "properties": {
+        "grant": { "$ref": "#/definitions/Grant" },
+        "connect": { "$ref": "#/definitions/Connect" },
+        "run-at": { "$ref": "#/definitions/RunAt" }
+      }
+    }
+  ]
+}

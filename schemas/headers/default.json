@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "description": "Default userscript header schema",
+  "additionalProperties": false,
+  "properties": {
+      "name": { "$ref": "_fields.json_fields.json#/definitions/Value" },
+      "namespace": { "$ref": "_fields.json#/definitions/Value" },
+      "description": { "$ref": "_fields.json#/definitions/Value" },
+      "version": { "$ref": "_fields.json#/definitions/Value" },
+      "author": { "$ref": "_fields.json#/definitions/Value" },
+      "collaborator": { "$ref": "_fields.json#/definitions/Multiple" },
+      "copyright": { "$ref": "_fields.json#/definitions/Value" },
+      "license": { "$ref": "_fields.json#/definitions/Multiple" },
+      "homepage": { "$ref": "_fields.json#/definitions/Value" },
+      "homepageURL": { "$ref": "_fields.json#/definitions/Value" },
+      "website": { "$ref": "_fields.json#/definitions/Value" },
+      "source": { "$ref": "_fields.json#/definitions/Value" },
+      "icon": { "$ref": "_fields.json#/definitions/Value" },
+      "iconURL": { "$ref": "_fields.json#/definitions/Value" },
+      "defaulticon": { "$ref": "_fields.json#/definitions/Value" },
+      "icon64": { "$ref": "_fields.json#/definitions/Value" },
+      "icon64URL": { "$ref": "_fields.json#/definitions/Value" },
+      "updateURL": { "$ref": "_fields.json#/definitions/Value" },
+      "downloadURL": { "$ref": "_fields.json#/definitions/Value" },
+      "installURL": { "$ref": "_fields.json#/definitions/Value" },
+      "supportURL": { "$ref": "_fields.json#/definitions/Value" },
+      "include": { "$ref": "_fields.json#/definitions/Multiple" },
+      "exclude": { "$ref": "_fields.json#/definitions/Multiple" },
+      "match": { "$ref": "_fields.json#/definitions/Multiple" },
+      "require": { "$ref": "_fields.json#/definitions/Multiple" },
+      "resource": { "$ref": "_fields.json#/definitions/NamedValue" },
+      "run-at": { "$ref": "_fields.json#/definitions/Value" },
+      "grant": { "$ref": "_fields.json#/definitions/Multiple" },
+      "noframes": { "$ref": "_fields.json#/definitions/Switch" },
+      "unwrap": { "$ref": "_fields.json#/definitions/Switch" },
+      "connect": { "$ref": "_fields.json#/definitions/Multiple" },
+      "webRequest": { "$ref": "_fields.json#/definitions/Multiple" },
+      "nocompat": {
+        "anyOf": [
+          { "$ref": "#/definitions/Switch" },
+          { "$ref": "#/definitions/Value" }
+        ]
+      }
+  },
+  "patternProperties": {
+    ".*": { "$ref": "_fields.json#/definitions/GeneralValue" }
+  },
+  "required": [ "name", "version" ]
+}

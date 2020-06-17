@@ -1,0 +1,9 @@
+{
+  "name": "Webpack Userscript",
+  "mode": "file",
+  "tsconfig": "tsconfig.json",
+  "categorizeByGroup": true,
+  "excludeNotExported": true,
+  "stripInternal": true,
+  "out": "docs"
+}

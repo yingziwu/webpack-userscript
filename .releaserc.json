@@ -5,6 +5,7 @@
     "@semantic-release/npm",
     [
       "@semantic-release/git", {
+        "assets": ["package.json", "package-lock.json", "docs"],
         "message": ":bookmark: v${nextRelease.version} [skip ci]\n\nhttps://github.com/momocow/webpack-userscript/releases/tag/${nextRelease.gitTag}"
       }
     ]

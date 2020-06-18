@@ -1,4 +1,11 @@
+import { Compiler } from 'webpack'
+
+import { WebpackUserscriptOptions } from './types'
+
 export class WebpackUserscript {
-  public apply (): void {
+  constructor (public options: WebpackUserscriptOptions) {
+  }
+
+  public apply (compiler: Compiler): void {
   }
 }

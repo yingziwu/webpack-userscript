@@ -12,4 +12,5 @@ jobs:
     - stage: release
       node_js: lts/*
       script:
+        - npm run docs
         - npm run release

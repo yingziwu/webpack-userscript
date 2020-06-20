@@ -1,18 +1,14 @@
 export type Optional<T> = T | undefined
 
-export type RunAt =
-  'document-start' |
-  'document-body' |
-  'document-end' |
-  'document-idle' |
-  'context-menu'
-
 /**
- * This interface is designed heavily against
- * [Tampermonkey API](https://www.tampermonkey.net/documentation.php),
- * e.g. string literal types for `@run-at`.
- * However, extensibility is preserved for other userscript engines
- * e.g. `@run-at` also accepts primitive string types.
+ * The `@default` tag is an URI with its fragment a
+ * [JSON pointer](https://tools.ietf.org/html/rfc6901) which indicates the source
+ * of its default value, typically starting from a `package.json`.
+ *
+ * The `@see` tag represents appositive fields.
+ *
+ * The `@alias` tag represents name alias which will be renamed back to the origin
+ * field names when rendering. It exists typically for camelcase naming convention.
  */
 export interface HeaderObject {
   /**
@@ -46,6 +42,11 @@ export interface HeaderObject {
   homepageURL?: string
 
   /**
+   * @alias {@link HeaderObject.homepageURL}
+   */
+  homepageUrl?: string
+
+  /**
    * @see {@link HeaderObject.homepage}
    */
   website?: string
@@ -58,18 +59,66 @@ export interface HeaderObject {
   namespace?: string
 
   icon?: string
+
+  /**
+   * @see {@link HeaderObject.icon}
+   */
   iconURL?: string
+
+  /**
+   * @alias {@link HeaderObject.iconURL}
+   */
+  iconUrl?: string
+
+  /**
+   * @see {@link HeaderObject.icon}
+   */
   defaulticon?: string
 
+  /**
+   * @alias {@link HeaderObject.defaulticon}
+   */
+  defaultIcon?: string
+
   icon64?: string
+
+  /**
+   * @see {@link HeaderObject.icon64}
+   */
   icon64URL?: string
+
+  /**
+   * @alias {@link HeaderObject.icon64URL}
+   */
+  icon64Url?: string
 
   updateURL?: string
 
+  /**
+   * @alias {@link HeaderObject.updateURL}
+   */
+  updateUrl?: string
+
   downloadURL?: string
+
+  /**
+   * @alias {@link HeaderObject.downloadURL}
+   */
+  downloadUrl?: string
+
   installURL?: string
 
+  /**
+   * @alias {@link HeaderObject.installURL}
+   */
+  installUrl?: string
+
   supportURL?: string
+
+  /**
+   * @alias {@link HeaderObject.supportURL}
+   */
+  supportUrl?: string
 
   include?: string | string[]
 
@@ -83,7 +132,12 @@ export interface HeaderObject {
 
   connect?: string | string[]
 
-  'run-at'?: RunAt
+  'run-at'?: string
+
+  /**
+   * @alias {@link HeaderObject.run-at}
+   */
+  runAt?: string
 
   grant?: string | string[] | 'none'
 
@@ -91,20 +145,93 @@ export interface HeaderObject {
 
   noframes?: boolean
 
+  /**
+   * @alias {@link HeaderObject.noframes}
+   */
+  noFrames?: boolean
+
   unwrap?: boolean
 
   nocompat?: boolean | string
 
-  [field: string]: string | string[] | boolean | undefined
+  /**
+   * @alias {@link HeaderObject.nocompat}
+   */
+  noCompat?: boolean
+
+  [field: string]: Optional<string | string[] | boolean>
 }
 
 export type HeaderFile = string
 
-// export interface DataObject {
-// }
+export interface DataObject {
+  hash: string
+  fullhash: string
 
-// export type HeaderProvider = (data: DataObject) => HeaderObject
+  /**
+   * Webpack chunk name.
+   */
+  chunkName: string
+
+  /**
+   * Entry file path, which may contain queries.
+   */
+  file: string
+
+  /**
+   * Just like `file` but without queries.
+   */
+  filename: string
+
+  /**
+   * Just like `filename` but without file extension, i.e. ".user.js" or ".js".
+   */
+  basename: string
+
+  /**
+   * Query string.
+   */
+  query: string
+
+  /**
+   * The POSIX timestamp in ms represents the time when
+   * the header object is about to be generated.
+   */
+  buildTime: number
+
+  /**
+   * `package.json#/name`
+   */
+  name: string
+
+  /**
+   * `package.json#/version`
+   */
+  version: string
+
+  /**
+   * `package.json#/description`
+   */
+  description: string
+
+  /**
+   * `package.json#/author`
+   */
+  author: string
+
+  /**
+   * `package.json#/homepage`
+   */
+  homepage: string
+
+  /**
+   * `package.json#/bugs` or `package.json#/bugs/url`
+   */
+  bugs: string
+}
+
+export type HeaderProvider = (data: DataObject) => HeaderObject
 
 export interface WebpackUserscriptOptions {
-  headers: HeaderObject // | HeaderObject | HeaderProvider
+  headers?: HeaderObject | HeaderObject | HeaderProvider
 }

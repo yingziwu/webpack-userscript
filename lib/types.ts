@@ -1,5 +1,7 @@
 export type Optional<T> = T | undefined
 
+export type HeaderValue = string | string[] | boolean
+
 /**
  * The `@default` tag is an URI with its fragment a
  * [JSON pointer](https://tools.ietf.org/html/rfc6901) which indicates the source
@@ -159,7 +161,7 @@ export interface HeaderObject {
    */
   noCompat?: boolean
 
-  [field: string]: Optional<string | string[] | boolean>
+  [field: string]: Optional<HeaderValue>
 }
 
 export type HeaderFile = string

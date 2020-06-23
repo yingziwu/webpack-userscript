@@ -1,27 +1,25 @@
 import libjoi from '@hapi/joi'
 import { semver } from 'joi-extension-semver'
-import { HeaderObject } from './types'
-
-/**
- * @internal
- */
-interface PackageObject {
-  name?: string
-  version?: string
-  description?: string
-  author?: string
-  homepage?: string
-  bugs?: string | { url: string }
-}
-
-/**
- * @internal
- */
-interface CookedHeaderObject {
-
-}
+import { HeaderObject, HeaderValue } from './types'
 
 const Joi: libjoi.Root = libjoi.extend(semver)
+
+/**
+ * @internal
+ */
+function formatContributor (c: Record<string, string>): string {
+  const tokens: string[] = []
+  if (typeof c.name === 'string') {
+    tokens.push(c.name)
+  }
+  if (typeof c.email === 'string') {
+    tokens.push(`<${c.email}>`)
+  }
+  if (typeof c.url === 'string') {
+    tokens.push(`(${c.url})`)
+  }
+  return tokens.join(' ')
+}
 
 const packageSchema = Joi.object({
   name: Joi.string(),
@@ -36,39 +34,63 @@ const packageSchema = Joi.object({
         url: Joi.string().$.uri().warn()
       })
     )
-    .custom((v) => typeof v === 'object' ? v.url : v)
+    .custom((v) => typeof v === 'object' ? v.url : v),
+  contributors: Joi.array().items(
+    Joi.string(),
+    Joi.object({
+      name: Joi.string(),
+      email: Joi.string(),
+      url: Joi.string()
+    })
+  )
+    .custom((v) => typeof v === 'object' ? formatContributor(v) : v)
 })
 
-export function validate (hdrs: HeaderObject, pkg: PackageObject) {
-  packageSchema.validate(pkg)
+export interface ValidationSuccess<V> { value: V }
+export interface ValidationFailure { warning?: Error, error?: Error }
+export type ValidationResult<V> = ValidationSuccess<V> | ValidationFailure
+
+export function validate (
+  hdrsIn: HeaderObject, pkgIn: Record<string, any>
+): ValidationResult<Record<string, HeaderValue>> {
+  const {
+    value: pkgCtx, error: pkgErr, warning: pkgWarn
+  } = packageSchema.validate(pkgIn, {
+    stripUnknown: true
+  })
+  if (typeof pkgWarn !== 'undefined' || typeof pkgErr !== 'undefined') {
+    return { error: pkgErr, warning: pkgWarn }
+  }
+  const { value, error, warning } = headerSchema.validate(hdrsIn, {
+    context: pkgCtx,
+    stripUnknown: false
+  })
+  if (typeof warning !== 'undefined' || typeof error !== 'undefined') {
+    return { error, warning }
+  }
+  return { value }
 }
 
-console.log(packageSchema.validate({
-  name: 'test',
-  version: '1.2.3-alpha.1',
-  homepage: 'http://1234.com',
-  bugs: { url: 'http://1234.com' },
-  additional: true
-}, { stripUnknown: true }))
-
 const headerSchema = Joi.object({
-  name: Joi.string()
+  name: Joi.any()
     .when('$pkg.name', { // .when() is used to validate the value from context
       is: Joi.string().exist(),
       then: Joi.string().default(Joi.ref('$pkg.name')),
       otherwise: Joi.string().required()
     }),
-  version: Joi.semver().valid()
+  version: Joi.any()
     .when('$pkg.version', {
-      is: Joi.semver().exist().valid(),
+      is: Joi.string().exist(),
       then: Joi.semver().default(Joi.ref('$pkg.version')),
-      otherwise: Joi.semver().required()
+      otherwise: Joi.semver().valid().required()
     }),
-  description: Joi.string().default(Joi.ref('$pkg.description')),
-  author: Joi.string().default(Joi.ref('$pkg.author')),
-  namespace: Joi.string(),
+  description: Joi.string()
+    .default(Joi.ref('$pkg.description')),
+  author: Joi.string()
+    .default(Joi.ref('$pkg.author')),
   collaborator: Joi.array().items(Joi.string()).single()
     .default(Joi.ref('$pkg.contributors')),
+  namespace: Joi.string(),
   copyright: Joi.string(),
   license: Joi.string(),
   homepage: Joi.string(),
@@ -98,13 +120,4 @@ const headerSchema = Joi.object({
   // webRequest
   // nocompat
 })
-
-// console.log(headerSchema.validate({
-// }, {
-//   context: {
-//     pkg: {
-//       name: 'test',
-//       version: '123'
-//     }
-//   }
-// }))
+  .rename(/^(.*)Url$/, '{#1}URL')

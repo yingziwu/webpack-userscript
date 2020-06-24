@@ -15,7 +15,8 @@
     "commit": "gitmoji -c",
     "lint": "eslint --ext .ts lib",
     "test": "tape test/**/*.test.js",
-    "release": "semantic-release"
+    "release": "semantic-release",
+    "repl": "ts-node"
   },
   "keywords": [
     "webpack",
@@ -62,6 +63,7 @@
     "joi-extension-semver": "^4.1.1",
     "schema-utils": "^2.7.0",
     "ssri": "^8.0.0",
+    "tapable": "^2.0.0-beta.11",
     "webpack-sources": "^1.4.3"
   },
   "files": [

@@ -10,7 +10,15 @@ import { extend as extendJoi, ObjectSchema, Root, Schema } from '@hapi/joi'
 import { semver } from 'joi-extension-semver'
 import { SyncWaterfallHook as SWHook } from 'tapable'
 import { FieldSchemaHookMap } from './hook'
-import { HeaderObject, ValidationContext, ValidationOptions, BakedHeaderObject, ValidationResult } from './types'
+import {
+  BakedHeaderObject,
+  HeaderObject,
+  ValidationContext,
+  ValidationOptions,
+  ValidationResult
+} from './types'
+
+import _omit from 'lodash/omit'
 
 export const Joi: Root = extendJoi(semver)
 
@@ -37,11 +45,10 @@ export const BUILTIN_FIELD_SCHEMA_FACTORIES: Record<string, () => Schema> = {
     return Joi.alternatives().try(
       Joi.object({
         name: Joi.string().required(),
-        email: Joi.string().$.email().warn(),
-        url: Joi.string().$.uri().warn()
+        email: Joi.string().email(),
+        url: Joi.string().uri()
       })
-        .unknown()
-        .custom(formatDeveloperObject),
+        .unknown(),
       Joi.string().default(Joi.ref('$pkg.author'))
     )
   },
@@ -49,16 +56,16 @@ export const BUILTIN_FIELD_SCHEMA_FACTORIES: Record<string, () => Schema> = {
     return Joi.string()
   },
   homepageURL () {
-    return Joi.string().$.uri().warn()
+    return Joi.string().uri()
   },
   icon () {
-    return Joi.string().$.uri().warn()
+    return Joi.string().uri()
   },
   updateURL () {
-    return Joi.string().$.uri().warn()
+    return Joi.string().uri()
   },
   downloadURL () {
-    return Joi.string().$.uri().warn()
+    return Joi.string().uri()
   },
   include () {
     return Joi.array().items(Joi.string()).single()
@@ -70,20 +77,19 @@ export const BUILTIN_FIELD_SCHEMA_FACTORIES: Record<string, () => Schema> = {
     return Joi.array().items(Joi.string()).single()
   },
   require () {
-    return Joi.array().items(Joi.string().$.uri().warn()).single()
+    return Joi.array().items(Joi.string().uri()).single()
   },
   resource () {
-    return Joi.object().pattern(/^.*$/, Joi.string().$.uri().warn())
+    return Joi.object().pattern(/^.*$/, Joi.string().uri())
   },
   'run-at' () {
-    return Joi.string()
-      .$.allow(
-        'document-start',
-        'document-body',
-        'document-end',
-        'document-idle',
-        'context-menu'
-      ).warn()
+    return Joi.string().allow(
+      'document-start',
+      'document-body',
+      'document-end',
+      'document-idle',
+      'context-menu'
+    )
   },
   grant () {
     return Joi.alternatives().try(
@@ -134,15 +140,15 @@ export function BUILTIN_HEADER_SCHEMA_FACTORY (schema: ObjectSchema): ObjectSche
     .alter({
       tampermonkey: (schema) => (schema as ObjectSchema)
         .keys({
-          homepage: Joi.string().$.uri().warn(),
-          source: Joi.string().$.uri().warn(),
-          website: Joi.string().$.uri().warn(),
-          defaulticon: Joi.string().$.uri().warn(),
-          iconURL: Joi.string().$.uri().warn(),
-          icon64: Joi.string().$.uri().warn(),
-          icon64URL: Joi.string().$.uri().warn(),
+          homepage: Joi.string().uri(),
+          source: Joi.string().uri(),
+          website: Joi.string().uri(),
+          defaulticon: Joi.string().uri(),
+          iconURL: Joi.string().uri(),
+          icon64: Joi.string().uri(),
+          icon64URL: Joi.string().uri(),
           connect: Joi.string().$.custom(validateConnect).warn(),
-          supportURL: Joi.string().$.uri().warn(),
+          supportURL: Joi.string().uri(),
           webRequest: Joi.string(),
           nocompat: Joi.alternatives().try(Joi.boolean(), Joi.string())
         })
@@ -152,20 +158,20 @@ export function BUILTIN_HEADER_SCHEMA_FACTORY (schema: ObjectSchema): ObjectSche
         .oxor('defaulticon', 'iconURL', 'icon'),
       greasemonkey: (schema) => (schema as ObjectSchema)
         .keys({
-          installURL: Joi.string().$.uri().warn()
+          installURL: Joi.string().uri()
         }),
       openuserjs: (schema) => (schema as ObjectSchema)
         .keys({
           copyright: Joi.string(),
           license: Joi.string(),
-          supportURL: Joi.string().$.uri().warn(),
+          supportURL: Joi.string().uri(),
           collaborator: Joi.array()
             .items(Joi.alternatives().try(
-              Joi.string(),
+              Joi.string()
             ))
             .single()
-            .default(Joi.ref('$pkg.contributors'))
-          // unstableMinify
+            .default(Joi.ref('$pkg.contributors')),
+          unstableMinify: Joi.string()
         })
     })
 }
@@ -176,16 +182,45 @@ export const DEFAULT_VALUE_SCHEMA = Joi.alternatives().try(
   Joi.boolean()
 )
 
-export class HeaderValidator<T = BakedHeaderObject> {
-  public static readonly headerSchemaHook = new SWHook<ObjectSchema>(
+class HeaderSchemaFactory<T = BakedHeaderObject> {
+  public readonly headerSchemaHook = new SWHook<ObjectSchema>(
     ['headerSchema']
   )
 
-  public static readonly fieldSchemaHooks = new FieldSchemaHookMap()
+  public readonly fieldSchemaHooks = new FieldSchemaHookMap()
 
+  public constructor (
+    private readonly Class: new (...args: any[]) => HeaderValidator<T>
+  ) { }
+
+  public build (ctx?: ValidationContext): HeaderValidator<T> {
+    const schemaObj: Record<string, Schema> = {}
+    for (const [field, fieldSchemaHook] of this.fieldSchemaHooks) {
+      schemaObj[field] = fieldSchemaHook.call(DEFAULT_VALUE_SCHEMA)
+    }
+    return new this.Class(
+      this.headerSchemaHook.call(Joi.object(schemaObj))
+        .pattern(/^.*$/, DEFAULT_VALUE_SCHEMA),
+      ctx
+    )
+  }
+
+  public installBuiltins (): void {
+    const name = '__builtins__'
+
+    this.headerSchemaHook.tap(name, BUILTIN_HEADER_SCHEMA_FACTORY)
+
+    for (const [field, fieldSchemaFactory]
+      of Object.entries(BUILTIN_FIELD_SCHEMA_FACTORIES)) {
+      this.fieldSchemaHooks.for(field).tap(name, fieldSchemaFactory)
+    }
+  }
+}
+
+export class HeaderValidator<T = BakedHeaderObject> {
   public readonly contextHook = new SWHook<ValidationContext>(['context'])
 
-  protected constructor (
+  public constructor (
     public schema: ObjectSchema,
     public context: ValidationContext = {}
   ) { }
@@ -194,33 +229,17 @@ export class HeaderValidator<T = BakedHeaderObject> {
     headers: HeaderObject,
     options: ValidationOptions = {}
   ): ValidationResult<T> {
-    return this.schema.validate(headers, {
+    const schema = typeof options.target !== 'undefined'
+      ? this.schema.tailor(options.target) as ObjectSchema : this.schema
+    return schema.validate(headers, {
       stripUnknown: false,
-      ...options,
+      ..._omit(options, 'target'),
       context: this.contextHook.call(this.context)
     })
   }
 
-  public static create (ctx?: ValidationContext): HeaderValidator {
-    const schemaObj: Record<string, Schema> = {}
-    for (const [field, fieldSchemaHook] of this.fieldSchemaHooks) {
-      schemaObj[field] = fieldSchemaHook.call(DEFAULT_VALUE_SCHEMA)
-    }
-    return new HeaderValidator(
-      this.headerSchemaHook.call(Joi.object(schemaObj)),
-      ctx
-    )
-  }
-
-  public static installBuiltins (): void {
-    const name = '__builtins__'
-
-    this.headerSchemaHook.tap(name, BUILTIN_HEADER_SCHEMA_FACTORY)
-
-    for (const [field, fieldSchemaFactory]
-      of Object.entries(BUILTIN_FIELD_SCHEMA_FACTORIES)) {
-      HeaderValidator.fieldSchemaHooks.for(field).tap(name, fieldSchemaFactory)
-    }
+  public static factory<U = BakedHeaderObject> (): HeaderSchemaFactory<U> {
+    return new HeaderSchemaFactory<U>(this)
   }
 }
 
@@ -256,28 +275,28 @@ function validateConnect (v: any): any {
   return value
 }
 
-/**
- * @internal
- */
-interface Developer {
-  name?: string
-  email?: string
-  url?: string
-}
+// /**
+//  * @internal
+//  */
+// interface Developer {
+//   name?: string
+//   email?: string
+//   url?: string
+// }
 
-/**
- * @internal
- */
-function formatDeveloperObject (e: Developer): string {
-  let ret = ''
-  if (typeof e.name === 'string') {
-    ret += e.name
-  }
-  if (typeof e.email === 'string') {
-    ret += `<${e.email}>`
-  }
-  if (typeof e.url === 'string') {
-    ret += `(${e.url})`
-  }
-  return ret
-}
+// /**
+//  * @internal
+//  */
+// function formatDeveloperObject (e: Developer): string {
+//   let ret = ''
+//   if (typeof e.name === 'string') {
+//     ret += e.name
+//   }
+//   if (typeof e.email === 'string') {
+//     ret += `<${e.email}>`
+//   }
+//   if (typeof e.url === 'string') {
+//     ret += `(${e.url})`
+//   }
+//   return ret
+// }

@@ -7,7 +7,7 @@ export class FieldSchemaHookMap {
   public for (field: string): SyncWaterfallHook<Schema> {
     let hook = this._map.get(field)
     if (typeof hook === 'undefined') {
-      hook = new SyncWaterfallHook<Schema>([`${field}FieldSchema`])
+      hook = new SyncWaterfallHook<Schema>(['fieldSchema'])
       this._map.set(field, hook)
     }
     return hook

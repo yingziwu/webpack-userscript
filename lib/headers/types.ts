@@ -1,7 +1,19 @@
 export type HeaderField = string
-export type HeaderValue = string | string[] | boolean
+export type HeaderValue = string | string[] | boolean | Record<string, any>
+
+export interface Contact {
+  name?: string
+  email?: string
+  url?: string
+}
+
+export type Resource = Record<string, string>
 
 /**
+ * This interface is mainly designed against
+ * [Tampermonkey](https://www.tampermonkey.net/documentation.php)
+ * but with extensibility left for other engines.
+ *
  * The `@default` tag is an URI with its fragment a
  * [JSON pointer](https://tools.ietf.org/html/rfc6901) which indicates the source
  * of its default value, typically starting from a `package.json`.
@@ -30,7 +42,7 @@ export interface HeaderObject {
   /**
    * @default `package.json#/author`
    */
-  author?: string
+  author?: string | Contact
 
   /**
    * @default `package.json#/homepage`
@@ -129,7 +141,7 @@ export interface HeaderObject {
 
   require?: string | string[]
 
-  resource?: string | string[]
+  resource?: Resource | Resource[]
 
   connect?: string | string[]
 

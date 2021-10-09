@@ -14,5 +14,5 @@ jobs:
       - name: Test
         run: |
           npm run lint &&
-          npm test
+          npm run test
 

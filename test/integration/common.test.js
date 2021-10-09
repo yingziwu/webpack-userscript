@@ -22,7 +22,7 @@ const CONTEXT_LIST = [
   'base-urls'
 ]
 
-for (let CONTEXT_NAME of CONTEXT_LIST) {
+for (const CONTEXT_NAME of CONTEXT_LIST) {
   test(CONTEXT_NAME, function (t) {
     const context = path.resolve(__dirname, '..', 'fixtures', CONTEXT_NAME)
     const compiler = webpack(getWebpackConfig(context))
@@ -42,7 +42,7 @@ for (let CONTEXT_NAME of CONTEXT_LIST) {
 
       if (stats.hasErrors()) {
         console.error(info.errors)
-        t.end(new Error(`Fixture errors.`))
+        t.end(new Error('Fixture errors.'))
         return
       }
 

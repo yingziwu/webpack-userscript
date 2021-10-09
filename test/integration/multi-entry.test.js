@@ -31,7 +31,7 @@ test('multi-entry', function (t) {
 
     if (stats.hasErrors()) {
       console.error(info.errors)
-      t.end(new Error(`Fixture errors.`))
+      t.end(new Error('Fixture errors.'))
       return
     }
 

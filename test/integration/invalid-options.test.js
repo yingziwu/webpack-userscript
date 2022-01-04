@@ -1,6 +1,6 @@
 const test = require('tape')
 const path = require('path')
-const ValidationError = require('schema-utils/src/ValidationError')
+const { ValidationError } = require('schema-utils')
 
 function getWebpackConfig (context) {
   return Object.assign(
